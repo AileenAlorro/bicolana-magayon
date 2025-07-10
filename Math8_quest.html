@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8th Grade Math Quest: Interactive Diagnostic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Stone, White, Teal, Amber) -->
+    <!-- Application Structure Plan: The SPA transforms the linear diagnostic quest into an interactive dashboard with four tabbed sections, one for each topic (chamber). This structure allows users to tackle topics in any order and focuses on one concept at a time, reducing cognitive load. The primary interaction is answering questions and receiving immediate feedback. A dynamic radar chart provides a real-time summary of performance across the four topics, which is the core goal of the source report. This is more usable than a static paper test because it's engaging, provides instant feedback, and synthesizes results automatically. -->
+    <!-- Visualization & Content Choices: 1. Main Data (Questions): Presented as interactive forms (radio buttons, text inputs) instead of static text. Goal: Assess. Method: HTML forms. Interaction: User input + 'Check' button. Justification: Active engagement over passive reading. 2. Performance Summary: A dynamic radar chart. Goal: Synthesize & Inform. Viz Method: Chart.js Radar Chart. Interaction: Updates in real-time after each answer, tooltips on hover. Justification: Provides an immediate, easy-to-understand visual profile of the user's skills across all topics, directly fulfilling the diagnostic objective. 3. Interactive Number Line: For question 19. Goal: Assess estimation skill. Method: Clickable HTML divs on a styled number line with a draggable marker. Interaction: User clicks to place their answer, and the exact value is displayed. Justification: More interactive and engaging than drawing on paper, allowing for precise input. CONFIRMED: NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-button[aria-current="true"] {
+            background-color: #0d9488;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .correct-answer {
+            border: 2px solid #10b981;
+        }
+        .incorrect-answer {
+            border: 2px solid #ef4444;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #0d9488;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .number-line-container {
+            height: 40px; /* Increased height to accommodate labels */
+            cursor: pointer;
+        }
+        .number-line-marker {
+            transition: left 0.1s ease-out;
+        }
+        .number-line-value-display {
+            transition: left 0.1s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-teal-800">8th Grade Math Quest</h1>
+            <p class="mt-2 text-lg text-slate-600">Unlock your power-ups by completing the four challenges!</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <nav id="chambers-nav" class="flex flex-wrap gap-2 border-b border-slate-200 pb-4 mb-6">
+                </nav>
+
+                <div id="quest-content">
+                    <h2 id="chamber-title" class="text-2xl font-bold mb-2 text-teal-700"></h2>
+                    <p id="chamber-description" class="text-slate-600 mb-6"></p>
+                    <div id="questions-container" class="space-y-6">
+                    </div>
+                </div>
+            </div>
+
+            <aside class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-center mb-4 text-teal-700">Performance Stats</h2>
+                <p class="text-slate-600 text-center mb-4">Your performance profile will update here as you answer questions.</p>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                <div id="summary-text" class="text-center mt-4 text-slate-600"></div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        const questData = {
+            "scientific_notation": {
+                title: "The Cosmic Numbers Chamber",
+                description: "This chamber tests your ability to work with very large and very small numbers. You'll need to convert numbers between standard and scientific notation and perform calculations.",
+                questions: [
+                    { type: 'text', text: 'The diameter of the planet Jupiter is approximately 140,000 km. Write this number in scientific notation.', answer: '1.4e5' },
+                    { type: 'text', text: 'A single red blood cell has a diameter of about 8 x 10<sup>-6</sup> meters. Write this number in standard form.', answer: '0.000008' },
+                    { type: 'mcq', text: 'Which of these numbers is the largest?', options: ['2.5 x 10<sup>4</sup>', '3.1 x 10<sup>3</sup>', '9.9 x 10<sup>-8</sup>', '2.5 x 10<sup>5</sup>'], answer: 3 },
+                    { type: 'text', text: 'Calculate: (4 x 10<sup>5</sup>) x (2 x 10<sup>2</sup>). Write your answer in scientific notation.', answer: '8e7' },
+                    { type: 'text', text: 'Calculate: (9 x 10<sup>8</sup>) / (3 x 10<sup>5</sup>). Write your answer in scientific notation.', answer: '3e3' }
+                ]
+            },
+            "exponents": {
+                title: "The Power-Up Palace",
+                description: "Here you will master the secret rules of exponents. Show your knowledge of multiplying, dividing, and raising powers to another power, including zero and negative exponents.",
+                questions: [
+                    { type: 'text', text: 'Simplify: a<sup>4</sup> ⋅ a<sup>6</sup>', answer: 'a^10' },
+                    { type: 'text', text: 'Simplify: x<sup>9</sup> / x<sup>3</sup>', answer: 'x^6' },
+                    { type: 'text', text: 'Simplify: (y<sup>5</sup>)<sup>2</sup>', answer: 'y^10' },
+                    { type: 'text', text: 'What is the value of 25<sup>0</sup>?', answer: '1' },
+                    { type: 'mcq', text: 'Which expression is equivalent to 5<sup>-2</sup>?', options: ['-10', '-25', '1/10', '1/25'], answer: 3 }
+                ]
+            },
+            "geometry": {
+                title: "The Geometric Gauntlet",
+                description: "Solve the puzzles of shapes and sides. This section tests your understanding of perfect squares, cubes, and the famous Pythagorean Theorem for right triangles.",
+                questions: [
+                    { type: 'text', text: 'What is the value of √81?', answer: '9' },
+                    { type: 'text', text: 'What is the value of ³√64?', answer: '4' },
+                    { type: 'text', text: 'A right triangle has legs that are 9 cm and 12 cm long. What is the length of the hypotenuse? (number only)', answer: '15' },
+                    { type: 'text', text: 'A TV screen is 16 inches tall and its diagonal is 20 inches. What is the width of the TV screen? (number only)', answer: '12' },
+                    { type: 'yesno', text: 'Would a triangle with side lengths of 5 feet, 12 feet, and 13 feet be a right triangle?', answer: 'yes', explanation: 'Yes, because 5² + 12² = 25 + 144 = 169, which equals 13².' }
+                ]
+            },
+            "irrational_numbers": {
+                title: "The Number Labyrinth",
+                description: "Classify wild numbers to find your way out of the maze. This challenge focuses on identifying rational vs. irrational numbers and estimating the value of square roots.",
+                questions: [
+                    { type: 'mcq', text: 'Which of the following numbers is irrational?', options: ['2/3', '√49', '0.5', '√5'], answer: 3 },
+                    { type: 'mcq', text: 'Is the number π (pi) rational or irrational?', options: ['Rational', 'Irrational'], answer: 1 },
+                    { type: 'mcq', text: 'The value of √20 is between which two consecutive whole numbers?', options: ['2 and 3', '3 and 4', '4 and 5', '5 and 6'], answer: 2 },
+                    { type: 'numberline', text: 'Place the number √15 on the number line below. (Click the point)', answerRange: [3.8, 3.9] },
+                    { type: 'truefalse', text: 'True or False: An irrational number is a decimal that never ends and never repeats.', answer: 'true' }
+                ]
+            }
+        };
+
+        let performanceScores = {
+            scientific_notation: { correct: 0, total: questData.scientific_notation.questions.length },
+            exponents: { correct: 0, total: questData.exponents.questions.length },
+            geometry: { correct: 0, total: questData.geometry.questions.length },
+            irrational_numbers: { correct: 0, total: questData.irrational_numbers.questions.length }
+        };
+
+        const navContainer = document.getElementById('chambers-nav');
+        const contentContainer = document.getElementById('questions-container');
+        const chamberTitle = document.getElementById('chamber-title');
+        const chamberDescription = document.getElementById('chamber-description');
+        let currentChamberId = 'scientific_notation';
+        let performanceChart;
+
+        const apiKey = "";
+
+        async function callGeminiAPI(prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("Gemini API returned an unexpected structure:", result);
+                    return "Sorry, I couldn't generate a response. Please try again.";
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                return "An error occurred while connecting to the AI. Please try again later.";
+            }
+        }
+
+        async function getGeminiHint(questionText, hintEl) {
+            hintEl.innerHTML = '<div class="loading-spinner"></div> Generating hint...';
+            const prompt = `Provide a short, subtle hint for this 8th grade math problem without giving away the answer: "${questionText}"`;
+            const hint = await callGeminiAPI(prompt);
+            hintEl.innerHTML = `<p class="mt-2 p-3 bg-blue-50 rounded-md border border-blue-200 text-blue-800 text-sm">✨ Hint: ${hint}</p>`;
+        }
+
+        async function getGeminiExplanation(questionText, correctAnswer, explanationEl) {
+            explanationEl.innerHTML = '<div class="loading-spinner"></div> Generating explanation...';
+            const prompt = `Explain the concept behind this 8th grade math problem and its solution in a way an 8th grader can understand: "${questionText}" The correct answer is "${correctAnswer}".`;
+            const explanation = await callGeminiAPI(prompt);
+            explanationEl.innerHTML = `<p class="mt-2 p-3 bg-amber-50 rounded-md border border-amber-200 text-amber-800 text-sm">✨ Explanation: ${explanation}</p>`;
+        }
+
+
+        function normalizeAnswer(answer) {
+            if (typeof answer !== 'string') return answer;
+            return answer.toLowerCase().replace(/\s+/g, '').replace('x10^', 'e');
+        }
+        
+        function renderChamber(chamberId) {
+            currentChamberId = chamberId;
+            const chamber = questData[chamberId];
+
+            chamberTitle.textContent = chamber.title;
+            chamberDescription.textContent = chamber.description;
+            contentContainer.innerHTML = '';
+
+            chamber.questions.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'p-4 border border-slate-200 rounded-lg';
+                questionEl.id = `question-${chamberId}-${index}`;
+
+                let inputHtml = '';
+                switch (q.type) {
+                    case 'text':
+                        inputHtml = `<p class="mb-2 font-semibold text-slate-700">${index + 1}. ${q.text}</p>
+                                     <input type="text" id="answer-${chamberId}-${index}" class="mt-1 block w-full md:w-1/2 rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">`;
+                        break;
+                    case 'mcq':
+                        const optionsHtml = q.options.map((opt, i) => `
+                            <label class="flex items-center space-x-3 p-2 rounded-md hover:bg-stone-50">
+                                <input type="radio" name="answer-${chamberId}-${index}" value="${i}" class="focus:ring-teal-500 h-4 w-4 text-teal-600 border-slate-300">
+                                <span>${opt}</span>
+                            </label>`).join('');
+                        inputHtml = `<p class="mb-2 font-semibold text-slate-700">${index + 1}. ${q.text}</p>
+                                     <div class="mt-2 space-y-1">${optionsHtml}</div>`;
+                        break;
+                    case 'yesno':
+                        inputHtml = `<p class="mb-2 font-semibold text-slate-700">${index + 1}. ${q.text}</p>
+                                     <div class="mt-2 space-x-4">
+                                         <label><input type="radio" name="answer-${chamberId}-${index}" value="yes"> Yes</label>
+                                         <label><input type="radio" name="answer-${chamberId}-${index}" value="no"> No</label>
+                                     </div>`;
+                        break;
+                    case 'truefalse':
+                        inputHtml = `<p class="mb-2 font-semibold text-slate-700">${index + 1}. ${q.text}</p>
+                                     <div class="mt-2 space-x-4">
+                                         <label><input type="radio" name="answer-${chamberId}-${index}" value="true"> True</label>
+                                         <label><input type="radio" name="answer-${chamberId}-${index}" value="false"> False</label>
+                                     </div>`;
+                        break;
+                    case 'numberline':
+                        inputHtml = `<p class="mb-2 font-semibold text-slate-700">${index + 1}. ${q.text}</p>
+                                     <div class="mt-8 mb-4 relative number-line-container" id="number-line-${chamberId}-${index}">
+                                        <div class="absolute top-1/2 w-full h-0.5 bg-slate-400"></div>
+                                        <div id="user-marker-${chamberId}-${index}" class="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-teal-600 cursor-pointer shadow-lg number-line-marker" style="left: 0%;"></div>
+                                        <div id="user-value-display-${chamberId}-${index}" class="absolute bottom-full mb-1 -translate-x-1/2 text-sm font-bold text-teal-800 bg-white px-1 rounded shadow number-line-value-display" style="left: 0%;">0.0</div>
+                                        <div class="absolute w-full flex justify-between top-full mt-1 text-xs font-medium text-slate-600">
+                                            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                                        </div>
+                                     </div>
+                                     <input type="hidden" id="answer-${chamberId}-${index}">`;
+                        break;
+                }
+
+                questionEl.innerHTML = `${inputHtml}
+                                        <div class="flex flex-wrap gap-2 mt-4">
+                                            <button class="check-btn px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 text-sm font-semibold" data-chamber="${chamberId}" data-index="${index}">Check Answer</button>
+                                            <button class="hint-btn px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-semibold" data-question-text="${q.text}">Get Hint ✨</button>
+                                        </div>
+                                        <p class="feedback mt-2 text-sm"></p>
+                                        <div class="gemini-response mt-2"></div>`;
+                contentContainer.appendChild(questionEl);
+
+                if (q.type === 'numberline') {
+                    const numberLineContainer = questionEl.querySelector(`#number-line-${chamberId}-${index}`);
+                    const userMarker = questionEl.querySelector(`#user-marker-${chamberId}-${index}`);
+                    const userValueDisplay = questionEl.querySelector(`#user-value-display-${chamberId}-${index}`);
+                    const hiddenInput = questionEl.querySelector(`#answer-${chamberId}-${index}`);
+
+                    // Set initial position and value
+                    userMarker.style.left = '0%';
+                    userValueDisplay.style.left = '0%';
+                    userValueDisplay.textContent = '0.0';
+                    hiddenInput.value = '0';
+
+                    numberLineContainer.addEventListener('click', function(event) {
+                        const rect = numberLineContainer.getBoundingClientRect();
+                        const clickX = event.clientX - rect.left;
+                        let percentage = (clickX / rect.width);
+                        
+                        // Clamp percentage between 0 and 1
+                        if (percentage < 0) percentage = 0;
+                        if (percentage > 1) percentage = 1;
+
+                        const value = (percentage * 10).toFixed(1); // Scale to 0-10 and round to 1 decimal place
+
+                        userMarker.style.left = `${percentage * 100}%`;
+                        userValueDisplay.style.left = `${percentage * 100}%`;
+                        userValueDisplay.textContent = value;
+                        hiddenInput.value = value;
+                    });
+                }
+            });
+            updateNav();
+        }
+
+        function handleCheckAnswer(e) {
+            const button = e.target;
+            const chamberId = button.dataset.chamber;
+            const index = parseInt(button.dataset.index);
+            const question = questData[chamberId].questions[index];
+            const questionEl = document.getElementById(`question-${chamberId}-${index}`);
+            const feedbackEl = questionEl.querySelector('.feedback');
+            const inputContainer = questionEl.querySelector('input, div'); // Target the input or the div for MCQs/Numberline
+            const geminiResponseContainer = questionEl.querySelector('.gemini-response');
+            let userAnswer;
+            let isCorrect = false;
+            let actualAnswerText = '';
+
+            switch (question.type) {
+                case 'text':
+                    userAnswer = document.getElementById(`answer-${chamberId}-${index}`).value;
+                    isCorrect = normalizeAnswer(userAnswer) === normalizeAnswer(question.answer);
+                    actualAnswerText = question.answer;
+                    break;
+                case 'mcq':
+                    const selectedRadio = document.querySelector(`input[name="answer-${chamberId}-${index}"]:checked`);
+                    userAnswer = selectedRadio ? selectedRadio.value : null;
+                    isCorrect = (question.type === 'mcq' ? parseInt(userAnswer) : userAnswer) === question.answer;
+                    actualAnswerText = question.options[question.answer];
+                    break;
+                case 'yesno':
+                    const selectedYesNo = document.querySelector(`input[name="answer-${chamberId}-${index}"]:checked`);
+                    userAnswer = selectedYesNo ? selectedYesNo.value : null;
+                    isCorrect = userAnswer === question.answer;
+                    actualAnswerText = question.explanation || question.answer;
+                    break;
+                case 'truefalse':
+                    const selectedTrueFalse = document.querySelector(`input[name="answer-${chamberId}-${index}"]:checked`);
+                    userAnswer = selectedTrueFalse ? selectedTrueFalse.value : null;
+                    isCorrect = userAnswer === question.answer;
+                    actualAnswerText = question.answer;
+                    break;
+                case 'numberline':
+                    userAnswer = parseFloat(document.getElementById(`answer-${chamberId}-${index}`).value);
+                    isCorrect = userAnswer >= question.answerRange[0] && userAnswer <= question.answerRange[1];
+                    actualAnswerText = `Between ${question.answerRange[0]} and ${question.answerRange[1]}`;
+                    break;
+            }
+
+            inputContainer.classList.remove('correct-answer', 'incorrect-answer');
+            if (isCorrect) {
+                performanceScores[chamberId].correct++;
+                feedbackEl.textContent = 'Correct! Great job!';
+                feedbackEl.className = 'feedback mt-2 text-sm font-semibold text-green-600';
+                inputContainer.classList.add('correct-answer');
+                geminiResponseContainer.innerHTML = '';
+            } else {
+                feedbackEl.textContent = `Not quite. The correct answer is: ${actualAnswerText}`;
+                feedbackEl.className = 'feedback mt-2 text-sm font-semibold text-red-600';
+                inputContainer.classList.add('incorrect-answer');
+                
+                const explainBtn = document.createElement('button');
+                explainBtn.className = 'explain-btn mt-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 text-sm font-semibold';
+                explainBtn.textContent = 'Explain Concept ✨';
+                explainBtn.dataset.questionText = question.text;
+                explainBtn.dataset.correctAnswer = actualAnswerText;
+                geminiResponseContainer.innerHTML = '';
+                geminiResponseContainer.appendChild(explainBtn);
+            }
+            
+            button.disabled = true;
+            button.style.opacity = '0.5';
+            questionEl.querySelector('.hint-btn').disabled = true;
+            questionEl.querySelector('.hint-btn').style.opacity = '0.5';
+            updateChart();
+        }
+
+        function updateNav() {
+            document.querySelectorAll('#chambers-nav .nav-button').forEach(btn => {
+                btn.setAttribute('aria-current', btn.dataset.chamber === currentChamberId);
+            });
+        }
+        
+        function initNav() {
+            Object.keys(questData).forEach(chamberId => {
+                const button = document.createElement('button');
+                button.textContent = questData[chamberId].title;
+                button.className = 'nav-button px-4 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-stone-100 transition-colors';
+                button.dataset.chamber = chamberId;
+                button.onclick = () => renderChamber(chamberId);
+                navContainer.appendChild(button);
+            });
+        }
+        
+        function initChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.values(questData).map(c => c.title.split(' ')[0]),
+                    datasets: [{
+                        label: 'Correct Answers',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                        borderColor: 'rgba(15, 118, 110, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(15, 118, 110, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(15, 118, 110, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5,
+                            stepSize: 1,
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { font: { size: 12 } },
+                            ticks: {
+                                backdropColor: 'rgba(255, 255, 255, 0.75)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const scores = Object.values(performanceScores).map(s => s.correct);
+            performanceChart.data.datasets[0].data = scores;
+            performanceChart.update();
+
+            const totalCorrect = Object.values(performanceScores).reduce((sum, s) => sum + s.correct, 0);
+            const totalQuestions = Object.values(performanceScores).reduce((sum, s) => sum + s.total, 0);
+            const answeredQuestions = document.querySelectorAll('.check-btn:disabled').length;
+            
+            if (answeredQuestions > 0) {
+                 document.getElementById('summary-text').textContent = `You've answered ${totalCorrect} of ${answeredQuestions} correctly so far.`
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initNav();
+            initChart();
+            renderChamber('scientific_notation');
+
+            contentContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('check-btn')) {
+                    handleCheckAnswer(e);
+                } else if (e.target.classList.contains('hint-btn')) {
+                    const questionText = e.target.dataset.questionText;
+                    const geminiResponseContainer = e.target.closest('.p-4').querySelector('.gemini-response');
+                    getGeminiHint(questionText, geminiResponseContainer);
+                } else if (e.target.classList.contains('explain-btn')) {
+                    const questionText = e.target.dataset.questionText;
+                    const correctAnswer = e.target.dataset.correctAnswer;
+                    const geminiResponseContainer = e.target.closest('.p-4').querySelector('.gemini-response');
+                    getGeminiExplanation(questionText, correctAnswer, geminiResponseContainer);
+                }
+                // The number-line-point click logic is now handled by the specific event listener
+                // attached to the number-line-container within renderChamber.
+                // This block is no longer needed here for the number line interaction.
+            });
+        });
+
+    </script>
+</body>
+</html>
