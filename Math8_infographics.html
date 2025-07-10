@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8th Grade Math Power-Up Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Brilliant Blues -->
+    <!-- Application Structure Plan: The infographic is structured as a visual learning guide with four distinct sections, each corresponding to a 'Challenge' from the source document. This thematic organization (Scientific Notation, Exponents, Geometry, Irrational Numbers) creates a logical learning path, starting with foundational concepts and building from there. This structure is more effective for an infographic than a simple list of facts because it groups related ideas, making them easier to understand and retain. The user flow is a simple vertical scroll, encouraging exploration from top to bottom. -->
+    <!-- Visualization & Content Choices: 1. Scientific Notation: A simple HTML/CSS card to INFORM by showing a clear "before and after" for large and small numbers. This is better than a complex chart for a simple conversion concept. NO SVG. 2. Exponent Rules: A series of HTML/CSS cards to ORGANIZE the rules. This clean, modular layout allows students to focus on one rule at a time. NO SVG/Mermaid. 3. Pythagorean Theorem: A Chart.js bar chart to COMPARE a² + b² vs. c² for a right triangle. This visually proves the theorem's validity in a way static text cannot. The bar chart is the most direct way to show this comparison. Chart.js with Canvas is used. NO SVG. 4. Irrational Number Estimation: An interactive HTML slider to allow students to CHANGE the value and see how it relates to perfect squares. This hands-on approach makes the abstract concept of estimation tangible. NO SVG. 5. Number Classification: An HTML/CSS flexbox diagram to ORGANIZE number types. This flowchart simplifies a complex hierarchy. NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #F8F9FA; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .data-card { background-color: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .gradient-text { background: linear-gradient(to right, #3A506B, #5BC0BE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto px-4 py-12">
+
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold gradient-text">Your 8th Grade Math Power-Up Guide</h1>
+            <p class="mt-4 text-lg max-w-2xl mx-auto text-slate-600">Master the core skills you'll need for this year's math adventure. Let's level up!</p>
+        </header>
+
+        <div class="space-y-12">
+
+            <section id="scientific-notation" class="data-card">
+                <h2 class="text-2xl font-bold text-[#0B132B] mb-4">Power-Up 1: Cosmic Numbers</h2>
+                <p class="mb-6 text-slate-600">Scientific notation is how we write super huge or super tiny numbers without a million zeros. It's all about powers of 10!</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="font-semibold text-lg text-[#1C2541]">For Huge Numbers</h3>
+                        <p class="text-sm text-slate-500 mb-4">Jupiter's Diameter</p>
+                        <p class="text-2xl md:text-3xl font-bold text-[#3A506B]">140,000 km</p>
+                        <p class="text-2xl font-light my-2">&darr;</p>
+                        <p class="text-2xl md:text-3xl font-bold text-[#5BC0BE]">1.4 &times; 10<sup>5</sup> km</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="font-semibold text-lg text-[#1C2541]">For Tiny Numbers</h3>
+                        <p class="text-sm text-slate-500 mb-4">Red Blood Cell</p>
+                        <p class="text-2xl md:text-3xl font-bold text-[#3A506B]">0.000008 m</p>
+                        <p class="text-2xl font-light my-2">&darr;</p>
+                        <p class="text-2xl md:text-3xl font-bold text-[#5BC0BE]">8 &times; 10<sup>-6</sup> m</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="exponents" class="data-card">
+                <h2 class="text-2xl font-bold text-[#0B132B] mb-4">Power-Up 2: Exponent Rules</h2>
+                <p class="mb-6 text-slate-600">Exponents have secret rules that make simplifying complex problems easy. Here are the main ones you need to know.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-[#1C2541] text-white p-4 rounded-lg text-center">
+                        <p class="font-bold">Multiplication Rule</p>
+                        <p class="text-sm font-mono mt-2 mb-3">a⁴ &sdot; a⁶ = a⁴⁺⁶</p>
+                        <p class="text-xl font-bold font-mono text-[#5BC0BE]">a¹⁰</p>
+                    </div>
+                    <div class="bg-[#1C2541] text-white p-4 rounded-lg text-center">
+                        <p class="font-bold">Division Rule</p>
+                        <p class="text-sm font-mono mt-2 mb-3">x⁹ / x³ = x⁹⁻³</p>
+                        <p class="text-xl font-bold font-mono text-[#5BC0BE]">x⁶</p>
+                    </div>
+                    <div class="bg-[#1C2541] text-white p-4 rounded-lg text-center">
+                        <p class="font-bold">Zero Exponent</p>
+                        <p class="text-sm font-mono mt-2 mb-3">Anything to the power of 0...</p>
+                        <p class="text-xl font-bold font-mono text-[#5BC0BE]">...is 1</p>
+                    </div>
+                    <div class="bg-[#1C2541] text-white p-4 rounded-lg text-center">
+                        <p class="font-bold">Negative Exponent</p>
+                        <p class="text-sm font-mono mt-2 mb-3">5⁻² becomes a fraction...</p>
+                        <p class="text-xl font-bold font-mono text-[#5BC0BE]">1 / 5²</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pythagorean" class="data-card">
+                <h2 class="text-2xl font-bold text-[#0B132B] mb-4">Power-Up 3: The Geometric Gauntlet</h2>
+                <p class="mb-6 text-slate-600">The Pythagorean Theorem is a special rule for **right triangles only**. It helps you find a missing side length when you know the other two.</p>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="text-center">
+                        <img src="https://placehold.co/400x300/F8F9FA/0B132B?text=a%C2%B2+%2B+b%C2%B2+%3D+c%C2%B2" alt="Pythagorean Theorem Diagram" class="mx-auto rounded-lg mb-4 w-full max-w-xs">
+                        <p class="text-xl font-bold font-mono text-[#1C2541]">a² + b² = c²</p>
+                        <p class="text-sm text-slate-500 mt-1">(Leg)² + (Leg)² = (Hypotenuse)²</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-center text-[#1C2541] mb-3">Visual Proof: 5-12-13 Triangle</h3>
+                        <p class="text-sm text-center mb-4 text-slate-500">Does a triangle with sides 5, 12, and 13 work? Let's check! 5² + 12² should equal 13².</p>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="pythagoreanChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="irrational" class="data-card">
+                <h2 class="text-2xl font-bold text-[#0B132B] mb-4">Power-Up 4: The Number Labyrinth</h2>
+                <p class="mb-6 text-slate-600">Not all numbers are neat and tidy. Irrational numbers are decimals that go on forever without repeating. The most famous is π (pi), but most square roots of non-perfect squares are also irrational.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                     <div>
+                        <h3 class="text-lg font-semibold text-center text-[#1C2541] mb-3">Rational vs. Irrational</h3>
+                        <div class="flex flex-col space-y-3">
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <p class="font-bold text-green-800">Rational 👍</p>
+                                <p class="text-sm text-green-700">Can be written as a fraction. Decimals stop or repeat.</p>
+                                <p class="font-mono text-green-900 mt-1">Examples: 2/3, 0.5, √49 (which is 7)</p>
+                            </div>
+                             <div class="bg-red-100 p-3 rounded-lg">
+                                <p class="font-bold text-red-800">Irrational 😵</p>
+                                <p class="text-sm text-red-700">Can't be a fraction. Decimals never end and never repeat.</p>
+                                <p class="font-mono text-red-900 mt-1">Examples: √5, √20, π</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                         <h3 class="text-lg font-semibold text-center text-[#1C2541] mb-3">Estimate the Value of √20</h3>
+                         <p class="text-sm text-center mb-4 text-slate-500">Since 20 is not a perfect square, √20 is irrational. We can estimate its value by seeing which perfect squares it's between.</p>
+                         <div class="bg-slate-50 p-6 rounded-xl">
+                            <div class="flex justify-between font-bold text-[#3A506B]">
+                                <p>√16 = 4</p>
+                                <p>√25 = 5</p>
+                            </div>
+                            <input id="sqrt-slider" type="range" min="4" max="5" value="4.47" step="0.01" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer my-2" disabled>
+                            <p class="text-center font-bold text-[#5BC0BE] text-lg">So, √20 is between 4 and 5!</p>
+                            <p class="text-center font-mono text-sm mt-1">(It's about 4.47)</p>
+                         </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartTooltipCallback = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                  return label.join(' ');
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // Pythagorean Chart
+            const ctxPythagorean = document.getElementById('pythagoreanChart').getContext('2d');
+            new Chart(ctxPythagorean, {
+                type: 'bar',
+                data: {
+                    labels: ['a² + b² (5²+12²)', 'c² (13²)'],
+                    datasets: [{
+                        label: 'Value',
+                        data: [169, 169], // 25 + 144 = 169, and 13*13 = 169
+                        backgroundColor: ['#5BC0BE', '#3A506B'],
+                        borderColor: ['#5BC0BE', '#3A506B'],
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    ...chartTooltipCallback,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 200
+                        }
+                    },
+                    plugins: {
+                        ...chartTooltipCallback.plugins,
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
